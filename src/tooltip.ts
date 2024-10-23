@@ -6,6 +6,7 @@ import {Direction} from "./bidi"
 import {WidgetView} from "./inlineview"
 import {Rect} from "./dom"
 import browser from "./browser"
+import { getDomDependencies } from "./domDependencies";
 
 type Measured = {
   editor: DOMRect,
@@ -154,6 +155,7 @@ const tooltipPlugin = ViewPlugin.fromClass(class {
     this.classes = view.themeClasses
     this.createContainer()
     this.measureReq = {read: this.readMeasure.bind(this), write: this.writeMeasure.bind(this), key: this}
+    const { ResizeObserver } = getDomDependencies();
     this.resizeObserver = typeof ResizeObserver == "function" ? new ResizeObserver(() => this.measureSoon()) : null
     this.manager = new TooltipViewManager(view, showTooltip, (t, p) => this.createTooltip(t, p), t => {
       if (this.resizeObserver) this.resizeObserver.unobserve(t.dom)
@@ -677,6 +679,8 @@ class HoverPlugin {
   }
 
   mousemove(event: MouseEvent) {
+    const { MouseEvent } = getDomDependencies();
+    Object.setPrototypeOf(event, MouseEvent.prototype);
     this.lastMove = {x: event.clientX, y: event.clientY, target: event.target as HTMLElement, time: Date.now()}
     if (this.hoverTimeout < 0) this.hoverTimeout = setTimeout(this.checkHover, this.hoverTime)
     let {active, tooltip} = this
@@ -729,6 +733,8 @@ function isInTooltip(tooltip: HTMLElement, event: MouseEvent) {
     top = Math.min(arrowRect.top, top)
     bottom = Math.max(arrowRect.bottom, bottom)
   }
+  const { MouseEvent } = getDomDependencies();
+  Object.setPrototypeOf(event, MouseEvent.prototype);
   return event.clientX >= left - tooltipMargin && event.clientX <= right + tooltipMargin &&
     event.clientY >= top - tooltipMargin && event.clientY <= bottom + tooltipMargin
 }

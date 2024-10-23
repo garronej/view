@@ -2,6 +2,7 @@ import {Extension, EditorSelection, EditorState, countColumn, findColumn} from "
 import {EditorView} from "./editorview"
 import {MouseSelectionStyle} from "./input"
 import {ViewPlugin} from "./extension"
+import { getDomDependencies } from "./domDependencies";
 
 type Pos = {line: number, col: number, off: number}
 
@@ -41,6 +42,8 @@ function absoluteColumn(view: EditorView, x: number) {
 }
 
 function getPos(view: EditorView, event: MouseEvent) {
+  const { MouseEvent } = getDomDependencies();
+  Object.setPrototypeOf(event, MouseEvent.prototype);
   let offset = view.posAtCoords({x: event.clientX, y: event.clientY}, false)
   let line = view.state.doc.lineAt(offset), off = offset - line.from
   let col = off > MaxOff ? -1

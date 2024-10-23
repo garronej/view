@@ -5,6 +5,7 @@ import {ViewPlugin, ViewUpdate} from "./extension"
 import {BlockType, WidgetType} from "./decoration"
 import {BlockInfo} from "./heightmap"
 import {Direction} from "./bidi"
+import { getDomDependencies } from "./domDependencies";
 
 /// A gutter marker represents a bit of information attached to a line
 /// in a specific gutter. Your own custom markers have to extend this
@@ -312,6 +313,8 @@ class SingleGutterView {
           let rect = target.getBoundingClientRect()
           y = (rect.top + rect.bottom) / 2
         } else {
+          const { MouseEvent } = getDomDependencies();
+          Object.setPrototypeOf(event, MouseEvent.prototype);
           y = (event as MouseEvent).clientY
         }
         let line = view.lineBlockAtHeight(y - view.documentTop)

@@ -25,6 +25,7 @@ export {highlightWhitespace, highlightTrailingWhitespace} from "./highlight-spac
 import {HeightMap, HeightOracle, MeasuredHeights, QueryType, clearHeightChangeFlag, heightChangeFlag} from "./heightmap"
 import {ChangedRange} from "./extension"
 import {computeOrder, moveVisually} from "./bidi"
+export { injectDomDependencies } from "./domDependencies";
 /// @internal
 export const __test = {HeightMap, HeightOracle, MeasuredHeights, QueryType, ChangedRange, computeOrder,
                        moveVisually, clearHeightChangeFlag, getHeightChangeFlag: () => heightChangeFlag}

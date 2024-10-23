@@ -7,6 +7,7 @@ import {DOMChange, applyDOMChange, applyDOMChangeInner} from "./domchange"
 import type {EditContext} from "./editcontext"
 import {Decoration} from "./decoration"
 import {Text, EditorSelection, EditorState} from "@codemirror/state"
+import { getDomDependencies } from "./domDependencies";
 
 const observeOptions = {
   childList: true,
@@ -102,6 +103,7 @@ export class DOMObserver {
     this.onScroll = this.onScroll.bind(this)
 
     if (window.matchMedia) this.printQuery = window.matchMedia("print")
+    const { ResizeObserver } = getDomDependencies();
     if (typeof ResizeObserver == "function") {
       this.resizeScroll = new ResizeObserver(() => {
         if (this.view.docView?.lastUpdate < Date.now() - 75) this.onResize()
