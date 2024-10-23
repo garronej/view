@@ -1,105 +1,81 @@
 
 
 export type DomDependencies = {
-    ResizeObserver: typeof ResizeObserver;
-    MouseEvent: typeof MouseEvent;
-    Range: typeof Range;
-    Element: typeof Element;
+    getResizeObserver: () => typeof ResizeObserver;
+    getMouseEventClientXOrY: (event: MouseEvent, axis: 'x' | 'y') => number;
+    getBoundingClientRect_Range: (target: Range) => DOMRect;
+    getBoundingClientRect_Element: (target: Element) => DOMRect;
+    getClientRects_Range: (target: Range) => DOMRectList;
+    getClientRects_Element: (target: Element) => DOMRectList;
 };
 
 let injectedDomDependencies: DomDependencies | undefined = undefined;
 
-export function getResizeObserver() {
-    return { ResizeObserver: injectedDomDependencies?.ResizeObserver ?? ResizeObserver };
+export function getResizeObserver(): typeof ResizeObserver {
+    if( injectedDomDependencies === undefined ){
+        return ResizeObserver;
+    }
+
+    return injectedDomDependencies.getResizeObserver();
+
 }
 
-function getMouseEvent(){
-    return { MouseEvent: injectedDomDependencies?.MouseEvent ?? MouseEvent };
-}
 
 export function getMouseEventClientXOrY(event: MouseEvent, axis: 'x' | 'y'): number {
 
-    const { MouseEvent } = getMouseEvent();
-
-    const pd = Object.getOwnPropertyDescriptor(MouseEvent.prototype, `client${axis.toUpperCase()}`);
-
-    if( pd === undefined ){
-        throw new Error("Assertion error");
+    if( injectedDomDependencies === undefined ){
+        switch(axis){
+            case 'x': return event.clientX;
+            case 'y': return event.clientY;
+        }
     }
 
-    const { get } = pd;
-
-    if( get === undefined ){
-        throw new Error("Assertion error");
-    }
-
-    return get.call(event) as number;
+    return injectedDomDependencies.getMouseEventClientXOrY(event, axis);
 
 }
 
 
 export function getBoundingClientRect_Range(target: Range): DOMRect {
 
-    const methodName = 'getBoundingClientRect';
-    const Constructor = Range;
-
     if( injectedDomDependencies === undefined ){
-        return target[methodName]();
+        return target.getBoundingClientRect();
     }
 
-    const originalPd = Object.getOwnPropertyDescriptor(Constructor.prototype, methodName);
+    return injectedDomDependencies.getBoundingClientRect_Range(target);
 
-    if( originalPd === undefined ){
-        throw new Error("Assertion error");
-    }
-
-    {
-        const dpPd = Object.getOwnPropertyDescriptor(injectedDomDependencies[Constructor.name].prototype, methodName);
-        if( dpPd === undefined ){
-            throw new Error("Assertion error");
-        }
-        Object.defineProperty(Constructor.prototype, methodName, dpPd);
-    }
-
-    const domRect = target[methodName]();
-
-    Object.defineProperty(Constructor.prototype, methodName, originalPd);
-
-    return domRect;
 
 }
 
 export function getBoundingClientRect_Element(target: Element): DOMRect {
 
-    const methodName = 'getBoundingClientRect';
-    const Constructor = Element;
-
     if( injectedDomDependencies === undefined ){
-        return target[methodName]();
+        return target.getBoundingClientRect();
     }
 
-    const originalPd = Object.getOwnPropertyDescriptor(Constructor.prototype, methodName);
+    return injectedDomDependencies.getBoundingClientRect_Element(target);
 
-    if( originalPd === undefined ){
-        throw new Error("Assertion error");
-    }
-
-    {
-        const dpPd = Object.getOwnPropertyDescriptor(injectedDomDependencies[Constructor.name].prototype, methodName);
-        if( dpPd === undefined ){
-            throw new Error("Assertion error");
-        }
-        Object.defineProperty(Constructor.prototype, methodName, dpPd);
-    }
-
-    const domRect = target[methodName]();
-
-    Object.defineProperty(Constructor.prototype, methodName, originalPd);
-
-    return domRect;
 
 }
 
+export function getClientRects_Range(target: Range): DOMRectList {
+
+    if( injectedDomDependencies === undefined ){
+        return target.getClientRects();
+    }
+
+    return injectedDomDependencies.getClientRects_Range(target);
+
+}
+
+export function getClientRects_Element(target: Element): DOMRectList {
+
+    if( injectedDomDependencies === undefined ){
+        return target.getClientRects();
+    }
+
+    return injectedDomDependencies.getClientRects_Element(target);
+
+}
 
 export function injectDomDependencies(domDependencies: DomDependencies): void {
     injectedDomDependencies = domDependencies;

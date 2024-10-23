@@ -9,7 +9,7 @@ import browser from "./browser"
 import {groupAt, skipAtomicRanges} from "./cursor"
 import {getSelection, focusPreventScroll, Rect, dispatchKey, scrollableParents} from "./dom"
 import {applyDOMChangeInner} from "./domchange"
-import { getMouseEventClientXOrY, getBoundingClientRect_Element } from "./domDependencies";
+import { getMouseEventClientXOrY, getBoundingClientRect_Element, getClientRects_Range } from "./domDependencies";
 
 export class InputState {
   lastKeyCode: number = 0
@@ -431,7 +431,7 @@ function isInPrimarySelection(view: EditorView, event: MouseEvent) {
   // selection's client rectangles
   let sel = getSelection(view.root)
   if (!sel || sel.rangeCount == 0) return true
-  let rects = sel.getRangeAt(0).getClientRects()
+  let rects = getClientRects_Range(sel.getRangeAt(0))
   for (let i = 0; i < rects.length; i++) {
     let rect = rects[i]
     if (rect.left <= getMouseEventClientXOrY(event, "x") && rect.right >= getMouseEventClientXOrY(event, "x") &&

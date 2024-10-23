@@ -1,4 +1,4 @@
-import { getBoundingClientRect_Element } from "./domDependencies";
+import { getBoundingClientRect_Element, getClientRects_Range, getClientRects_Element } from "./domDependencies";
 
 export function getSelection(root: DocumentOrShadowRoot): Selection | null {
   let target
@@ -31,9 +31,9 @@ export function hasSelection(dom: HTMLElement, selection: SelectionRange): boole
 
 export function clientRectsFor(dom: Node) {
   if (dom.nodeType == 3)
-    return textRange(dom as Text, 0, dom.nodeValue!.length).getClientRects()
+    return getClientRects_Range(textRange(dom as Text, 0, dom.nodeValue!.length));
   else if (dom.nodeType == 1)
-    return (dom as HTMLElement).getClientRects()
+    return getClientRects_Element(dom as HTMLElement)
   else
     return [] as any as DOMRectList
 }

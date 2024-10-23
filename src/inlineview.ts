@@ -5,7 +5,7 @@ import {Rect, flattenRect, textRange, clientRectsFor, clearAttributes} from "./d
 import {DocView} from "./docview"
 import browser from "./browser"
 import {EditorView} from "./editorview"
-import {getBoundingClientRect_Element} from "./domDependencies";
+import {getBoundingClientRect_Element, getClientRects_Range, getClientRects_Element} from "./domDependencies";
 
 const MaxJoinLen = 256
 
@@ -151,7 +151,7 @@ function textCoords(text: Text, pos: number, side: number): Rect | null {
   } else {
     if (side < 0) from--; else if (to < length) to++
   }
-  let rects = textRange(text, from, to).getClientRects()
+  let rects = getClientRects_Range(textRange(text, from, to))
   if (!rects.length) return null
   let rect = rects[(flatten ? flatten < 0 : side >= 0) ? 0 : rects.length - 1]
   if (browser.safari && !flatten && rect.width == 0) rect = Array.prototype.find.call(rects, r => r.width) || rect
@@ -231,7 +231,7 @@ export class WidgetView extends ContentView {
   coordsAt(pos: number, side: number): Rect | null {
     let custom = this.widget.coordsAt(this.dom!, pos, side)
     if (custom) return custom
-    let rects = this.dom!.getClientRects(), rect: Rect | null = null
+    let rects = getClientRects_Element(this.dom!), rect: Rect | null = null
     if (!rects.length) return null
     let fromBack = this.side ? this.side < 0 : pos > 0
     for (let i = fromBack ? rects.length - 1 : 0;; i += (fromBack ? -1 : 1)) {

@@ -8,7 +8,7 @@ import {clientRectsFor, textRange, Rect, maxOffset} from "./dom"
 import {moveVisually, movedOver, Direction} from "./bidi"
 import {BlockInfo} from "./heightmap"
 import browser from "./browser"
-import { getBoundingClientRect_Element, getBoundingClientRect_Range } from "./domDependencies";
+import { getBoundingClientRect_Element, getBoundingClientRect_Range, getClientRects_Range } from "./domDependencies";
 
 declare global {
   interface Selection { modify(action: string, direction: string, granularity: string): void }
@@ -102,7 +102,7 @@ function domPosInText(node: Text, x: number, y: number): {node: Node, offset: nu
   let len = node.nodeValue!.length
   let closestOffset = -1, closestDY = 1e9, generalSide = 0
   for (let i = 0; i < len; i++) {
-    let rects = textRange(node, i, i + 1).getClientRects()
+    let rects = getClientRects_Range(textRange(node, i, i + 1));
     for (let j = 0; j < rects.length; j++) {
       let rect = rects[j]
       if (rect.top == rect.bottom) continue

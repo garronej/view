@@ -13,7 +13,7 @@ import {ViewUpdate, decorations as decorationsFacet, outerDecorations, ChangedRa
         ScrollTarget, scrollHandler, getScrollMargins, logException, setEditContextFormatting} from "./extension"
 import {EditorView} from "./editorview"
 import {Direction} from "./bidi"
-import { getBoundingClientRect_Element } from "./domDependencies";
+import { getBoundingClientRect_Element, getClientRects_Range } from "./domDependencies";
 
 type Composition = {
   range: ChangedRange,
@@ -417,7 +417,7 @@ export class DocView extends ContentView {
     if (!(child instanceof TextView)) return null
     let end = findClusterBreak(child.text, off)
     if (end == off) return null
-    let rects = textRange(child.dom as Text, off, end).getClientRects()
+    let rects = getClientRects_Range(textRange(child.dom as Text, off, end));
     for (let i = 0; i < rects.length; i++) {
       let rect = rects[i]
       if (i == rects.length - 1 || rect.top < rect.bottom && rect.left < rect.right) return rect
