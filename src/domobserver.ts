@@ -7,7 +7,7 @@ import {DOMChange, applyDOMChange, applyDOMChangeInner} from "./domchange"
 import type {EditContext} from "./editcontext"
 import {Decoration} from "./decoration"
 import {Text, EditorSelection, EditorState} from "@codemirror/state"
-import { getResizeObserver } from "./domDependencies";
+import { getResizeObserver, getBoundingClientRect_Element, getBoundingClientRect_Range } from "./domDependencies";
 
 const observeOptions = {
   childList: true,
@@ -612,10 +612,10 @@ class EditContextManager {
     for (let event in this.handlers) context.addEventListener(event as any, this.handlers[event])
 
     this.measureReq = {read: view => {
-      this.editContext.updateControlBounds(view.contentDOM.getBoundingClientRect())
+      this.editContext.updateControlBounds(getBoundingClientRect_Element(view.contentDOM))
       let sel = getSelection(view.root)
       if (sel && sel.rangeCount)
-        this.editContext.updateSelectionBounds(sel.getRangeAt(0).getBoundingClientRect())
+        this.editContext.updateSelectionBounds(getBoundingClientRect_Range(sel.getRangeAt(0)))
     }}
   }
 

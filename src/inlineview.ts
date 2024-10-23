@@ -5,6 +5,7 @@ import {Rect, flattenRect, textRange, clientRectsFor, clearAttributes} from "./d
 import {DocView} from "./docview"
 import browser from "./browser"
 import {EditorView} from "./editorview"
+import {getBoundingClientRect_Element} from "./domDependencies";
 
 const MaxJoinLen = 256
 
@@ -289,7 +290,7 @@ export class WidgetBufferView extends ContentView {
   domBoundsAround() { return null }
 
   coordsAt(pos: number): Rect | null {
-    return this.dom!.getBoundingClientRect()
+    return getBoundingClientRect_Element(this.dom!)
   }
 
   get overrideDOMText() {
@@ -362,7 +363,7 @@ export function coordsInChildren(view: ContentView, pos: number, side: number): 
 
 function fallbackRect(view: ContentView) {
   let last = view.dom!.lastChild
-  if (!last) return (view.dom as HTMLElement).getBoundingClientRect()
+  if (!last) return getBoundingClientRect_Element(view.dom as HTMLElement)
   let rects = clientRectsFor(last)
   return rects[rects.length - 1] || null
 }

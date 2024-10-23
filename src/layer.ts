@@ -5,6 +5,7 @@ import {Direction} from "./bidi"
 import {BlockType} from "./decoration"
 import {BlockInfo} from "./heightmap"
 import {blockAt} from "./cursor"
+import { getBoundingClientRect_Element } from "./domDependencies";
 
 /// Markers shown in a [layer](#view.layer) must conform to this
 /// interface. They are created in a measuring phase, and have to
@@ -82,7 +83,7 @@ export class RectangleMarker implements LayerMarker {
 }
 
 function getBase(view: EditorView) {
-  let rect = view.scrollDOM.getBoundingClientRect()
+  let rect = getBoundingClientRect_Element(view.scrollDOM)
   let left = view.textDirection == Direction.LTR ? rect.left : rect.right - view.scrollDOM.clientWidth * view.scaleX
   return {left: left - view.scrollDOM.scrollLeft * view.scaleX, top: rect.top - view.scrollDOM.scrollTop * view.scaleY}
 }
@@ -90,7 +91,7 @@ function getBase(view: EditorView) {
 function wrappedLine(view: EditorView, pos: number, side: 1 | -1, inside: {from: number, to: number}) {
   let coords = view.coordsAtPos(pos, side * 2 as any)
   if (!coords) return inside
-  let editorRect = view.dom.getBoundingClientRect()
+  let editorRect = getBoundingClientRect_Element(view.dom)
   let y = (coords.top + coords.bottom) / 2
   let left = view.posAtCoords({x: editorRect.left + 1, y})
   let right = view.posAtCoords({x: editorRect.right - 1, y})
@@ -107,7 +108,7 @@ function rectanglesForRange(view: EditorView, className: string, range: Selectio
   let from = Math.max(range.from, view.viewport.from), to = Math.min(range.to, view.viewport.to)
 
   let ltr = view.textDirection == Direction.LTR
-  let content = view.contentDOM, contentRect = content.getBoundingClientRect(), base = getBase(view)
+  let content = view.contentDOM, contentRect = getBoundingClientRect_Element(content), base = getBase(view)
   let lineElt = content.querySelector(".cm-line"), lineStyle = lineElt && window.getComputedStyle(lineElt)
   let leftSide = contentRect.left +
     (lineStyle ? parseInt(lineStyle.paddingLeft) + Math.min(0, parseInt(lineStyle.textIndent)) : 0)

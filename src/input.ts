@@ -9,7 +9,7 @@ import browser from "./browser"
 import {groupAt, skipAtomicRanges} from "./cursor"
 import {getSelection, focusPreventScroll, Rect, dispatchKey, scrollableParents} from "./dom"
 import {applyDOMChangeInner} from "./domchange"
-import { getMouseEventClientXOrY } from "./domDependencies";
+import { getMouseEventClientXOrY, getBoundingClientRect_Element } from "./domDependencies";
 
 export class InputState {
   lastKeyCode: number = 0
@@ -323,8 +323,8 @@ class MouseSelection {
 
     let sx = 0, sy = 0
     let left = 0, top = 0, right = this.view.win.innerWidth, bottom = this.view.win.innerHeight
-    if (this.scrollParents.x) ({left, right} = this.scrollParents.x.getBoundingClientRect())
-    if (this.scrollParents.y) ({top, bottom} = this.scrollParents.y.getBoundingClientRect())
+    if (this.scrollParents.x) ({left, right} = getBoundingClientRect_Element(this.scrollParents.x))
+    if (this.scrollParents.y) ({top, bottom} = getBoundingClientRect_Element(this.scrollParents.y))
     let margins = getScrollMargins(this.view)
     if (getMouseEventClientXOrY(event, "x") - margins.left <= left + dragScrollMargin)
       sx = -dragScrollSpeed(left - getMouseEventClientXOrY(event, "x"))

@@ -1,6 +1,7 @@
 import {Facet, Extension} from "@codemirror/state"
 import {EditorView} from "./editorview"
 import {ViewPlugin, ViewUpdate} from "./extension"
+import { getBoundingClientRect_Element } from "./domDependencies";
 
 type PanelConfig = {
   /// By default, panels will be placed inside the editor's DOM
@@ -174,8 +175,8 @@ class PanelGroup {
   scrollMargin() {
     return !this.dom || this.container ? 0
       : Math.max(0, this.top ?
-        this.dom.getBoundingClientRect().bottom - Math.max(0, this.view.scrollDOM.getBoundingClientRect().top) :
-        Math.min(innerHeight, this.view.scrollDOM.getBoundingClientRect().bottom) - this.dom.getBoundingClientRect().top)
+        getBoundingClientRect_Element(this.dom).bottom - Math.max(0, getBoundingClientRect_Element(this.view.scrollDOM).top) :
+        Math.min(innerHeight, getBoundingClientRect_Element(this.view.scrollDOM).bottom) - getBoundingClientRect_Element(this.dom).top)
   }
 
   syncClasses() {

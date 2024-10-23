@@ -24,6 +24,7 @@ import {Attrs, updateAttrs, combineAttrs} from "./attributes"
 import browser from "./browser"
 import {computeOrder, trivialOrder, BidiSpan, Direction, Isolate, isolatesEq} from "./bidi"
 import {applyDOMChange, DOMChange} from "./domchange"
+import { getBoundingClientRect_Element } from "./domDependencies";
 
 /// The type of object given to the [`EditorView`](#view.EditorView)
 /// constructor.
@@ -595,7 +596,7 @@ export class EditorView {
   /// may be negative when the editor is scrolled down. Points
   /// directly to the top of the first line, not above the padding.
   get documentTop() {
-    return this.contentDOM.getBoundingClientRect().top + this.viewState.paddingTop
+    return getBoundingClientRect_Element(this.contentDOM).top + this.viewState.paddingTop
   }
 
   /// Reports the padding above and below the document.

@@ -8,6 +8,7 @@ import {clientRectsFor, textRange, Rect, maxOffset} from "./dom"
 import {moveVisually, movedOver, Direction} from "./bidi"
 import {BlockInfo} from "./heightmap"
 import browser from "./browser"
+import { getBoundingClientRect_Element, getBoundingClientRect_Range } from "./domDependencies";
 
 declare global {
   interface Selection { modify(action: string, direction: string, granularity: string): void }
@@ -112,7 +113,7 @@ function domPosInText(node: Text, x: number, y: number): {node: Node, offset: nu
         if (browser.chrome || browser.gecko) {
           // Check for RTL on browsers that support getting client
           // rects for empty ranges.
-          let rectBefore = textRange(node, i).getBoundingClientRect()
+          let rectBefore = getBoundingClientRect_Range(textRange(node, i))
           if (rectBefore.left == rect.right) after = !right
         }
         if (dy <= 0) return {node, offset: i + (after ? 1 : 0)}
@@ -125,7 +126,7 @@ function domPosInText(node: Text, x: number, y: number): {node: Node, offset: nu
 }
 
 export function posAtCoords(view: EditorView, coords: {x: number, y: number}, precise: boolean, bias: -1 | 1 = -1): number | null {
-  let content = view.contentDOM.getBoundingClientRect(), docTop = content.top + view.viewState.paddingTop
+  let content = getBoundingClientRect_Element(view.contentDOM), docTop = content.top + view.viewState.paddingTop
   let block, {docHeight} = view.viewState
   let {x, y} = coords, yOffset = y - docTop
   if (yOffset < 0) return 0
@@ -199,7 +200,7 @@ export function posAtCoords(view: EditorView, coords: {x: number, y: number}, pr
   let nearest = view.docView.nearest(node)
   if (!nearest) return null
   if (nearest.isWidget && nearest.dom?.nodeType == 1) {
-    let rect = (nearest.dom as HTMLElement).getBoundingClientRect()
+    let rect = getBoundingClientRect_Element(nearest.dom as HTMLElement)
     return coords.y < rect.top || coords.y <= rect.bottom && coords.x <= (rect.left + rect.right) / 2
       ? nearest.posAtStart : nearest.posAtEnd
   } else {
@@ -227,7 +228,7 @@ function isSuspiciousSafariCaretResult(node: Node, offset: number, x: number) {
   if (node.nodeType != 3 || offset != (len = node.nodeValue!.length)) return false
   for (let next = node.nextSibling; next; next = next.nextSibling)
     if (next.nodeType != 1 || next.nodeName != "BR") return false
-  return textRange(node as Text, len - 1, len).getBoundingClientRect().left > x
+  return getBoundingClientRect_Range(textRange(node as Text, len - 1, len)).left > x
 }
 
 // Chrome will move positions between lines to the start of the next line
@@ -239,8 +240,8 @@ function isSuspiciousChromeCaretResult(node: Node, offset: number, x: number) {
     if ((parent as HTMLElement).classList.contains("cm-line")) break
     cur = parent
   }
-  let rect = node.nodeType == 1 ? (node as HTMLElement).getBoundingClientRect()
-    : textRange(node as Text, 0, Math.max(node.nodeValue!.length, 1)).getBoundingClientRect()
+  let rect = node.nodeType == 1 ? getBoundingClientRect_Element(node as HTMLElement)
+    : getBoundingClientRect_Range(textRange(node as Text, 0, Math.max(node.nodeValue!.length, 1)))
   return x - rect.left > 5
 }
 
@@ -257,7 +258,7 @@ export function moveToLineBoundary(view: EditorView, start: SelectionRange, forw
   let coords = !includeWrap || line.type != BlockType.Text || !(view.lineWrapping || line.widgetLineBreaks) ? null
     : view.coordsAtPos(start.assoc < 0 && start.head > line.from ? start.head - 1 : start.head)
   if (coords) {
-    let editorRect = view.dom.getBoundingClientRect()
+    let editorRect = getBoundingClientRect_Element(view.dom)
     let direction = view.textDirectionAt(line.from)
     let pos = view.posAtCoords({x: forward == (direction == Direction.LTR) ? editorRect.right - 1 : editorRect.left + 1,
                                 y: (coords.top + coords.bottom) / 2})
@@ -303,7 +304,7 @@ export function moveVertically(view: EditorView, start: SelectionRange, forward:
   let startPos = start.head, dir: -1 | 1 = forward ? 1 : -1
   if (startPos == (forward ? view.state.doc.length : 0)) return EditorSelection.cursor(startPos, start.assoc)
   let goal = start.goalColumn, startY
-  let rect = view.contentDOM.getBoundingClientRect()
+  let rect = getBoundingClientRect_Element(view.contentDOM)
   let startCoords = view.coordsAtPos(startPos, start.assoc || -1), docTop = view.documentTop
   if (startCoords) {
     if (goal == null) goal = startCoords.left - rect.left

@@ -1,6 +1,7 @@
 import {StateField, StateEffect, Extension} from "@codemirror/state"
 import {EditorView} from "./editorview"
 import {ViewPlugin, MeasureRequest, ViewUpdate} from "./extension"
+import { getBoundingClientRect_Element } from "./domDependencies"
 
 const setDropCursorPos = StateEffect.define<number | null>({
   map(pos, mapping) { return pos == null ? null : mapping.mapPos(pos) }
@@ -44,7 +45,7 @@ const drawDropCursor = ViewPlugin.fromClass(class {
     let pos = view.state.field(dropCursorPos)
     let rect = pos != null && view.coordsAtPos(pos)
     if (!rect) return null
-    let outer = view.scrollDOM.getBoundingClientRect()
+    let outer = getBoundingClientRect_Element(view.scrollDOM)
     return { 
       left: rect.left - outer.left + view.scrollDOM.scrollLeft * view.scaleX,
       top: rect.top - outer.top + view.scrollDOM.scrollTop * view.scaleY,

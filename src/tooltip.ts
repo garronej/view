@@ -6,7 +6,7 @@ import {Direction} from "./bidi"
 import {WidgetView} from "./inlineview"
 import {Rect} from "./dom"
 import browser from "./browser"
-import { getMouseEventClientXOrY, getResizeObserver } from "./domDependencies";
+import { getMouseEventClientXOrY, getResizeObserver, getBoundingClientRect_Element } from "./domDependencies";
 
 type Measured = {
   editor: DOMRect,
@@ -252,7 +252,7 @@ const tooltipPlugin = ViewPlugin.fromClass(class {
   }
 
   readMeasure(): Measured {
-    let editor = this.view.dom.getBoundingClientRect()
+    let editor = getBoundingClientRect_Element(this.view.dom)
     let scaleX = 1, scaleY = 1, makeAbsolute = false
     if (this.position == "fixed" && this.manager.tooltipViews.length) {
       let {dom} = this.manager.tooltipViews[0]
@@ -264,13 +264,13 @@ const tooltipPlugin = ViewPlugin.fromClass(class {
       } else if (dom.style.top == Outside && dom.style.left == "0px") {
         // On other browsers, we have to awkwardly try and use other
         // information to detect a transform.
-        let rect = dom.getBoundingClientRect()
+        let rect = getBoundingClientRect_Element(dom)
         makeAbsolute = Math.abs(rect.top + 10000) > 1 || Math.abs(rect.left) > 1
       }
     }
     if (makeAbsolute || this.position == "absolute") {
       if (this.parent) {
-        let rect = this.parent.getBoundingClientRect()
+        let rect = getBoundingClientRect_Element(this.parent)
         if (rect.width && rect.height) {
           scaleX = rect.width / this.parent.offsetWidth
           scaleY = rect.height / this.parent.offsetHeight
@@ -281,12 +281,12 @@ const tooltipPlugin = ViewPlugin.fromClass(class {
     }
     return {
       editor,
-      parent: this.parent ? this.container.getBoundingClientRect() : editor,
+      parent: this.parent ? getBoundingClientRect_Element(this.container) : editor,
       pos: this.manager.tooltips.map((t, i) => {
         let tv = this.manager.tooltipViews[i]
         return tv.getCoords ? tv.getCoords(t.pos) : this.view.coordsAtPos(t.pos)
       }),
-      size: this.manager.tooltipViews.map(({dom}) => dom.getBoundingClientRect()),
+      size: this.manager.tooltipViews.map(({dom}) => getBoundingClientRect_Element(dom)),
       space: this.view.state.facet(tooltipConfig).tooltipSpace(this.view),
       scaleX, scaleY, makeAbsolute
     }
@@ -725,9 +725,9 @@ class HoverPlugin {
 const tooltipMargin = 4
 
 function isInTooltip(tooltip: HTMLElement, event: MouseEvent) {
-  let {left, right, top, bottom} = tooltip.getBoundingClientRect(), arrow
+  let {left, right, top, bottom} = getBoundingClientRect_Element(tooltip), arrow
   if (arrow = tooltip.querySelector(".cm-tooltip-arrow")) {
-    let arrowRect = arrow.getBoundingClientRect()
+    let arrowRect = getBoundingClientRect_Element(arrow)
     top = Math.min(arrowRect.top, top)
     bottom = Math.max(arrowRect.bottom, bottom)
   }
@@ -736,7 +736,7 @@ function isInTooltip(tooltip: HTMLElement, event: MouseEvent) {
 }
 
 function isOverRange(view: EditorView, from: number, to: number, x: number, y: number, margin: number) {
-  let rect = view.scrollDOM.getBoundingClientRect()
+  let rect = getBoundingClientRect_Element(view.scrollDOM)
   let docBottom = view.documentTop + view.documentPadding.top + view.contentHeight
   if (rect.left > x || rect.right < x || rect.top > y || Math.min(rect.bottom, docBottom) < y) return false
   let pos = view.posAtCoords({x, y}, false)

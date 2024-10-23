@@ -7,7 +7,7 @@ import {Attrs, combineAttrs, attrsEq, updateAttrs} from "./attributes"
 import browser from "./browser"
 import {EditorView} from "./editorview"
 import {Text} from "@codemirror/state"
-import {  } from "./domDependencies";
+import { getBoundingClientRect_Element } from "./domDependencies";
 
 export interface BlockView extends ContentView {
   covers(side: -1 | 1): boolean
@@ -132,7 +132,7 @@ export class LineView extends ContentView implements BlockView {
       textHeight = rects[0].height
     }
     return !totalWidth ? null : {
-      lineHeight: this.dom!.getBoundingClientRect().height,
+      lineHeight: getBoundingClientRect_Element(this.dom!).height,
       charWidth: totalWidth / this.length,
       textHeight
     }
@@ -244,7 +244,7 @@ export class BlockWidgetView extends ContentView implements BlockView {
     let custom = this.widget.coordsAt(this.dom!, pos, side)
     if (custom) return custom
     if (this.widget instanceof BlockGapWidget) return null
-    return flattenRect(this.dom!.getBoundingClientRect(), this.length ? pos == 0 : side <= 0)
+    return flattenRect(getBoundingClientRect_Element(this.dom!), this.length ? pos == 0 : side <= 0)
   }
 
   destroy() {

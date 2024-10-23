@@ -7,9 +7,10 @@ import {decorations, ViewUpdate, UpdateFlag, ChangedRange, ScrollTarget, nativeS
 import {WidgetType, Decoration, DecorationSet, BlockType} from "./decoration"
 import {EditorView} from "./editorview"
 import {Direction} from "./bidi"
+import { getBoundingClientRect_Element } from "./domDependencies";
 
 function visiblePixelRange(dom: HTMLElement, paddingTop: number): Rect {
-  let rect = dom.getBoundingClientRect()
+  let rect = getBoundingClientRect_Element(dom)
   let doc = dom.ownerDocument, win = doc.defaultView || window
   let left = Math.max(0, rect.left), right = Math.min(win.innerWidth, rect.right)
   let top = Math.max(0, rect.top), bottom = Math.min(win.innerHeight, rect.bottom)
@@ -19,7 +20,7 @@ function visiblePixelRange(dom: HTMLElement, paddingTop: number): Rect {
       let style = window.getComputedStyle(elt)
       if ((elt.scrollHeight > elt.clientHeight || elt.scrollWidth > elt.clientWidth) &&
           style.overflow != "visible") {
-        let parentRect = elt.getBoundingClientRect()
+        let parentRect = getBoundingClientRect_Element(elt)
         left = Math.max(left, parentRect.left)
         right = Math.min(right, parentRect.right)
         top = Math.max(top, parentRect.top)
@@ -38,7 +39,7 @@ function visiblePixelRange(dom: HTMLElement, paddingTop: number): Rect {
 }
 
 function fullPixelRange(dom: HTMLElement, paddingTop: number): Rect {
-  let rect = dom.getBoundingClientRect()
+  let rect = getBoundingClientRect_Element(dom)
   return {left: 0, right: rect.right - rect.left,
           top: paddingTop, bottom: rect.bottom - (rect.top + paddingTop)}
 }
@@ -259,7 +260,7 @@ export class ViewState {
     this.defaultTextDirection = style.direction == "rtl" ? Direction.RTL : Direction.LTR
 
     let refresh = this.heightOracle.mustRefreshForWrapping(whiteSpace)
-    let domRect = dom.getBoundingClientRect()
+    let domRect = getBoundingClientRect_Element(dom)
     let measureContent = refresh || this.mustMeasureContent || this.contentDOMHeight != domRect.height
     this.contentDOMHeight = domRect.height
     this.mustMeasureContent = false

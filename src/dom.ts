@@ -1,3 +1,5 @@
+import { getBoundingClientRect_Element } from "./domDependencies";
+
 export function getSelection(root: DocumentOrShadowRoot): Selection | null {
   let target
   // Browsers differ on whether shadow roots have a getSelection
@@ -128,7 +130,7 @@ export function scrollRectIntoView(dom: HTMLElement, rect: Rect, side: -1 | 1,
           cur = cur.assignedSlot || cur.parentNode
           continue
         }
-        let rect = cur.getBoundingClientRect()
+        let rect = getBoundingClientRect_Element(cur)
         ;({scaleX, scaleY} = getScale(cur, rect))
         // Make sure scrollbar width isn't included in the rectangle
         bounding = {left: rect.left, right: rect.left + cur.clientWidth * scaleX,

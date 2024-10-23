@@ -13,6 +13,7 @@ import {ViewUpdate, decorations as decorationsFacet, outerDecorations, ChangedRa
         ScrollTarget, scrollHandler, getScrollMargins, logException, setEditContextFormatting} from "./extension"
 import {EditorView} from "./editorview"
 import {Direction} from "./bidi"
+import { getBoundingClientRect_Element } from "./domDependencies";
 
 type Composition = {
   range: ChangedRange,
@@ -433,7 +434,7 @@ export class DocView extends ContentView {
       let child = this.children[i], end = pos + child.length
       if (end > to) break
       if (pos >= from) {
-        let childRect = child.dom!.getBoundingClientRect()
+        let childRect = getBoundingClientRect_Element(child.dom!)
         result.push(childRect.height)
         if (isWider) {
           let last = child.dom!.lastChild
@@ -476,7 +477,7 @@ export class DocView extends ContentView {
     this.view.observer.ignore(() => {
       this.dom.appendChild(dummy)
       let rect = clientRectsFor(dummy.firstChild!)[0]
-      lineHeight = dummy.getBoundingClientRect().height
+      lineHeight = getBoundingClientRect_Element(dummy).height
       charWidth = rect ? rect.width / 27 : 7
       textHeight = rect ? rect.height : lineHeight
       dummy.remove()
