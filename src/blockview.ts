@@ -7,6 +7,7 @@ import {Attrs, combineAttrs, attrsEq, updateAttrs} from "./attributes"
 import browser from "./browser"
 import {EditorView} from "./editorview"
 import {Text} from "@codemirror/state"
+import {  } from "./domDependencies";
 
 export interface BlockView extends ContentView {
   covers(side: -1 | 1): boolean

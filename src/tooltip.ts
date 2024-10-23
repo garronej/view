@@ -6,7 +6,7 @@ import {Direction} from "./bidi"
 import {WidgetView} from "./inlineview"
 import {Rect} from "./dom"
 import browser from "./browser"
-import { getDomDependencies } from "./domDependencies";
+import { getMouseEventClientXOrY, getResizeObserver } from "./domDependencies";
 
 type Measured = {
   editor: DOMRect,
@@ -155,7 +155,7 @@ const tooltipPlugin = ViewPlugin.fromClass(class {
     this.classes = view.themeClasses
     this.createContainer()
     this.measureReq = {read: this.readMeasure.bind(this), write: this.writeMeasure.bind(this), key: this}
-    const { ResizeObserver } = getDomDependencies();
+    const { ResizeObserver } = getResizeObserver();
     this.resizeObserver = typeof ResizeObserver == "function" ? new ResizeObserver(() => this.measureSoon()) : null
     this.manager = new TooltipViewManager(view, showTooltip, (t, p) => this.createTooltip(t, p), t => {
       if (this.resizeObserver) this.resizeObserver.unobserve(t.dom)
@@ -679,15 +679,13 @@ class HoverPlugin {
   }
 
   mousemove(event: MouseEvent) {
-    const { MouseEvent } = getDomDependencies();
-    Object.setPrototypeOf(event, MouseEvent.prototype);
-    this.lastMove = {x: event.clientX, y: event.clientY, target: event.target as HTMLElement, time: Date.now()}
+    this.lastMove = {x: getMouseEventClientXOrY(event, "x"), y: getMouseEventClientXOrY(event, "y"), target: event.target as HTMLElement, time: Date.now()}
     if (this.hoverTimeout < 0) this.hoverTimeout = setTimeout(this.checkHover, this.hoverTime)
     let {active, tooltip} = this
     if (active.length && tooltip && !isInTooltip(tooltip.dom, event) || this.pending) {
       let {pos} = active[0] || this.pending!, end = active[0]?.end ?? pos
       if ((pos == end ? this.view.posAtCoords(this.lastMove) != pos
-           : !isOverRange(this.view, pos, end, event.clientX, event.clientY, Hover.MaxDist))) {
+           : !isOverRange(this.view, pos, end, getMouseEventClientXOrY(event, "x"), getMouseEventClientXOrY(event, "y"), Hover.MaxDist))) {
         this.view.dispatch({effects: this.setHover.of([])})
         this.pending = null
       }
@@ -733,10 +731,8 @@ function isInTooltip(tooltip: HTMLElement, event: MouseEvent) {
     top = Math.min(arrowRect.top, top)
     bottom = Math.max(arrowRect.bottom, bottom)
   }
-  const { MouseEvent } = getDomDependencies();
-  Object.setPrototypeOf(event, MouseEvent.prototype);
-  return event.clientX >= left - tooltipMargin && event.clientX <= right + tooltipMargin &&
-    event.clientY >= top - tooltipMargin && event.clientY <= bottom + tooltipMargin
+  return getMouseEventClientXOrY(event, "x") >= left - tooltipMargin && getMouseEventClientXOrY(event, "x") <= right + tooltipMargin &&
+    getMouseEventClientXOrY(event, "y") >= top - tooltipMargin && getMouseEventClientXOrY(event, "y") <= bottom + tooltipMargin
 }
 
 function isOverRange(view: EditorView, from: number, to: number, x: number, y: number, margin: number) {

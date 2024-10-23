@@ -76,7 +76,7 @@ const drawDropCursor = ViewPlugin.fromClass(class {
 }, {
   eventObservers: {
     dragover(event) {
-      this.setDropPos(this.view.posAtCoords({x: event.clientX, y: event.clientY}))
+      this.setDropPos(this.view.posAtCoords({ x: event.clientX, y: event.clientY }))
     },
     dragleave(event) {
       if (event.target == this.view.contentDOM || !this.view.contentDOM.contains(event.relatedTarget as HTMLElement))

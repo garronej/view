@@ -9,7 +9,7 @@ import browser from "./browser"
 import {groupAt, skipAtomicRanges} from "./cursor"
 import {getSelection, focusPreventScroll, Rect, dispatchKey, scrollableParents} from "./dom"
 import {applyDOMChangeInner} from "./domchange"
-import { getDomDependencies } from "./domDependencies";
+import { getMouseEventClientXOrY } from "./domDependencies";
 
 export class InputState {
   lastKeyCode: number = 0
@@ -281,10 +281,7 @@ function dragScrollSpeed(dist: number) {
 }
 
 function dist(a: MouseEvent, b: MouseEvent) {
-  const { MouseEvent } = getDomDependencies();
-  Object.setPrototypeOf(a, MouseEvent.prototype);
-  Object.setPrototypeOf(b, MouseEvent.prototype);
-  return Math.max(Math.abs(a.clientX - b.clientX), Math.abs(a.clientY - b.clientY))
+  return Math.max(Math.abs(getMouseEventClientXOrY(a, "x") - getMouseEventClientXOrY(b, "x")), Math.abs(getMouseEventClientXOrY(a, "y") - getMouseEventClientXOrY(b, "y")))
 }
 
 class MouseSelection {
@@ -329,19 +326,14 @@ class MouseSelection {
     if (this.scrollParents.x) ({left, right} = this.scrollParents.x.getBoundingClientRect())
     if (this.scrollParents.y) ({top, bottom} = this.scrollParents.y.getBoundingClientRect())
     let margins = getScrollMargins(this.view)
-
-    const { MouseEvent } = getDomDependencies();
-
-    Object.setPrototypeOf(event, MouseEvent.prototype);
-
-    if (event.clientX - margins.left <= left + dragScrollMargin)
-      sx = -dragScrollSpeed(left - event.clientX)
-    else if (event.clientX + margins.right >= right - dragScrollMargin)
-      sx = dragScrollSpeed(event.clientX - right)
-    if (event.clientY - margins.top <= top + dragScrollMargin)
-      sy = -dragScrollSpeed(top - event.clientY)
-    else if (event.clientY + margins.bottom >= bottom - dragScrollMargin)
-      sy = dragScrollSpeed(event.clientY - bottom)
+    if (getMouseEventClientXOrY(event, "x") - margins.left <= left + dragScrollMargin)
+      sx = -dragScrollSpeed(left - getMouseEventClientXOrY(event, "x"))
+    else if (getMouseEventClientXOrY(event, "x") + margins.right >= right - dragScrollMargin)
+      sx = dragScrollSpeed(getMouseEventClientXOrY(event, "x") - right)
+    if (getMouseEventClientXOrY(event, "y") - margins.top <= top + dragScrollMargin)
+      sy = -dragScrollSpeed(top - getMouseEventClientXOrY(event, "y"))
+    else if (getMouseEventClientXOrY(event, "y") + margins.bottom >= bottom - dragScrollMargin)
+      sy = dragScrollSpeed(getMouseEventClientXOrY(event, "y") - bottom)
     this.setScrollSpeed(sx, sy)
   }
 
@@ -440,12 +432,10 @@ function isInPrimarySelection(view: EditorView, event: MouseEvent) {
   let sel = getSelection(view.root)
   if (!sel || sel.rangeCount == 0) return true
   let rects = sel.getRangeAt(0).getClientRects()
-  const { MouseEvent } = getDomDependencies();
-  Object.setPrototypeOf(event, MouseEvent.prototype);
   for (let i = 0; i < rects.length; i++) {
     let rect = rects[i]
-    if (rect.left <= event.clientX && rect.right >= event.clientX &&
-        rect.top <= event.clientY && rect.bottom >= event.clientY) return true
+    if (rect.left <= getMouseEventClientXOrY(event, "x") && rect.right >= getMouseEventClientXOrY(event, "x") &&
+        rect.top <= getMouseEventClientXOrY(event, "y") && rect.bottom >= getMouseEventClientXOrY(event, "y")) return true
   }
   return false
 }
@@ -599,10 +589,8 @@ function findPositionSide(view: EditorView, pos: number, x: number, y: number) {
 }
 
 function queryPos(view: EditorView, event: MouseEvent): {pos: number, bias: 1 | -1} {
-  const { MouseEvent } = getDomDependencies();
-  Object.setPrototypeOf(event, MouseEvent.prototype);
-  let pos = view.posAtCoords({x: event.clientX, y: event.clientY}, false)
-  return {pos, bias: findPositionSide(view, pos, event.clientX, event.clientY)}
+  let pos = view.posAtCoords({x: getMouseEventClientXOrY(event, "x"), y: getMouseEventClientXOrY(event, "y")}, false)
+  return {pos, bias: findPositionSide(view, pos, getMouseEventClientXOrY(event, "x"), getMouseEventClientXOrY(event, "y"))}
 }
 
 const BadMouseDetail = browser.ie && browser.ie_version <= 11
@@ -613,11 +601,8 @@ function getClickType(event: MouseEvent) {
   let last = lastMouseDown, lastTime = lastMouseDownTime
   lastMouseDown = event
   lastMouseDownTime = Date.now()
-  const { MouseEvent } = getDomDependencies();
-  Object.setPrototypeOf(event, MouseEvent.prototype);
-  Object.setPrototypeOf(last, MouseEvent.prototype);
-  return lastMouseDownCount = !last || (lastTime > Date.now() - 400 && Math.abs(last.clientX - event.clientX) < 2 &&
-                                        Math.abs(last.clientY - event.clientY) < 2) ? (lastMouseDownCount + 1) % 3 : 1
+  return lastMouseDownCount = !last || (lastTime > Date.now() - 400 && Math.abs(getMouseEventClientXOrY(last, "x") - getMouseEventClientXOrY(event, "x")) < 2 &&
+                                        Math.abs(getMouseEventClientXOrY(last, "y") - getMouseEventClientXOrY(event, "y")) < 2) ? (lastMouseDownCount + 1) % 3 : 1
 }
 
 function basicMouseSelection(view: EditorView, event: MouseEvent) {
@@ -689,9 +674,7 @@ handlers.dragend = view => {
 function dropText(view: EditorView, event: DragEvent, text: string, direct: boolean) {
   text = textFilter(view.state, clipboardInputFilter, text)
   if (!text) return
-  const { MouseEvent } = getDomDependencies();
-  Object.setPrototypeOf(event, MouseEvent.prototype);
-  let dropPos = view.posAtCoords({x: event.clientX, y: event.clientY}, false)
+  let dropPos = view.posAtCoords({x: getMouseEventClientXOrY(event, "x"), y: getMouseEventClientXOrY(event, "y")}, false)
 
   let {draggedContent} = view.inputState
   let del = direct && draggedContent && dragMovesSelection(view, event)

@@ -9,17 +9,34 @@ export type DomDependencies = {
 
 let injectedDomDependencies: DomDependencies | undefined = undefined;
 
-export function getDomDependencies(): DomDependencies {
-    if (injectedDomDependencies === undefined) {
-        return {
-            ResizeObserver: ResizeObserver,
-            MouseEvent: MouseEvent,
-            Range: Range,
-            Element: Element,
-        };
-    }
-    return injectedDomDependencies;
+export function getResizeObserver() {
+    return { ResizeObserver: injectedDomDependencies?.ResizeObserver ?? ResizeObserver };
 }
+
+function getMouseEvent(){
+    return { MouseEvent: injectedDomDependencies?.MouseEvent ?? MouseEvent };
+}
+
+export function getMouseEventClientXOrY(event: MouseEvent, axis: 'x' | 'y'): number {
+
+    const { MouseEvent } = getMouseEvent();
+
+    const pd = Object.getOwnPropertyDescriptor(MouseEvent.prototype, `client${axis.toUpperCase()}`);
+
+    if( pd === undefined ){
+        throw new Error("Assertion error");
+    }
+
+    const { get } = pd;
+
+    if( get === undefined ){
+        throw new Error("Assertion error");
+    }
+
+    return get.call(event) as number;
+
+}
+
 
 export function injectDomDependencies(domDependencies: DomDependencies): void {
     injectedDomDependencies = domDependencies;
